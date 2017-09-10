@@ -6,26 +6,17 @@
 
 # Stores the notification status as a pair of keys and values.
 # The keys are used to remove parts of the notification status line.
-KEY_VAL_FILE="$HOME/.not_kv" 
-OUT_FILE="$HOME/.not"
+[ -z "$CUSTOM_HOME" ] && CUSTOM_HOME="$HOME"
+KEY_VAL_FILE="$CUSTOM_HOME/.not_kv" 
+OUT_FILE="$CUSTOM_HOME/.not"
 
 usage() {
     echo "Usage: $0 [-ghpvgx] [-sid VALUE] [-o OUTPUT]"
-    echo "      -h --help               display this help and exit"
-    echo "      -k --key KEY            set key"
-    echo "      -a --add MESSAGE        add message"
-    echo "      -d --delete KEY         delete notification line element by key"
-    echo "      -t --time DURATION      set the duration of the notification element"
-}
-
-set_value_or_exit() {
-    case "$1" in
-        "") echo "Option $1 requires an optional argument"; exit 1 ;;
-        *)  
-            eval "$2=""$1"""
-            echo eval "$2=""$1"""
-            #eval $2="$1"
-    esac
+    echo "      -h  display this help and exit"
+    echo "      -k  set key"
+    echo "      -a  add message"
+    echo "      -d  delete notification line element by key"
+    echo "      -t  set the duration of the notification element"
 }
 
 is_number() {
@@ -57,27 +48,26 @@ case "$MODE" in
         else
             echo "$KEY=$MESSAGE" >> "$KEY_VAL_FILE"
         fi
+        chmod 666 "$KEY_VAL_FILE"
         ;;
     'delete') 
         [ -z "$KEY" ] && echo "A key ia required: set key using the -k field" && usage && exit 1 
         # delete all instances of KEY from file
         sed -i "/$KEY/d" "$KEY_VAL_FILE" 
+        chmod 666 "$KEY_VAL_FILE"
         ;;
-    'get')
+    'get'|*)
         ! [ -f "$KEY_VAL_FILE" ] && echo "No key_val file" && exit 0
-        lines="$(sed "s/^.*=/\"/g;s/$/\"/g" < "$KEY_VAL_FILE")" # > "$OUT_FILE"
-        echo "$lines"
+        lines="$(sed "s/^.*=//g" < "$KEY_VAL_FILE")" # > "$OUT_FILE"
+        #echo "$lines"
         BIFS="$IFS"
-        IFS="$(printf '\t\n')"
+        IFS="$(printf '\t\n\"')"
         for l in $lines; do
-            printf "[%s] " "$l"
+            printf "[%s]" "$l"
         done
-        printf "\n"
         IFS="$BIFS"
-        ;;
-    *) 
-        # print notification file
-        [ -f "$OUT_FILE" ] && cat "$OUT_FILE"
+        printf "\n"
+        exit 0
         ;;
 esac
 
@@ -86,15 +76,18 @@ case "$MODE" in
     'add'|'delete') 
         [ -f "$OUT_FILE" ] && rm "$OUT_FILE"
         ! [ -f "$KEY_VAL_FILE" ] && echo "No key_val file" && exit 0
-        lines="$(sed "s/^.*=/\"/g;s/$/\"/g" < "$KEY_VAL_FILE")" # > "$OUT_FILE"
+        lines="$(sed "s/^.*=//g" < "$KEY_VAL_FILE")" # > "$OUT_FILE"
         BIFS="$IFS"
-        IFS="$(printf '\t\n')"
+        IFS="$(printf '\t\n\"')"
         for l in $lines; do
-            printf "[%s] " "$l" >> "$OUT_FILE"
+            printf "[%s]" "$l" >> "$OUT_FILE"
         done
         IFS="$BIFS"
 
+        # make the file rw for everyone
+        chmod 666 "$OUT_FILE"
         ;;
+
 esac
 
 # sleep for duration then delete key using a recursive call to itself
