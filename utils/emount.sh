@@ -10,7 +10,7 @@ success() {
 
 failure() {
     # write to statusline
-    notification -t 10 -k "emount" -a "ecryptfs: failed" &
+    notification -t 10 -k "emount_failure" -a "ecryptfs: failed" &
     echo "[FAILURE]"
     exit 1
 }
