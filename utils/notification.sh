@@ -6,7 +6,7 @@
 
 # Stores the notification status as a pair of keys and values.
 # The keys are used to remove parts of the notification status line.
-[ -z "$CUSTOM_HOME" ] && CUSTOM_HOME="$HOME"
+[ -z "$CUSTOM_HOME" ] && CUSTOM_HOME="$HOME" || echo "using CUSTOM_HOME=$CUSTOM_HOME" &2>1
 KEY_VAL_FILE="$CUSTOM_HOME/.not_kv" 
 OUT_FILE="$CUSTOM_HOME/.not"
 
@@ -36,7 +36,7 @@ while getopts "$OPTS" arg; do
     esac
 done
 
-[ -f "$KEY_VAL_FILE" ] || touch "$KEY_VAL_FILE" && chmod 666 "$KEY_VAL_FILE"
+! [ -f "$KEY_VAL_FILE" ] && touch "$KEY_VAL_FILE" && chmod 666 "$KEY_VAL_FILE"
 
 case "$MODE" in
     'add') 
