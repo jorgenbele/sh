@@ -3,13 +3,14 @@ SECRET_DIR="sec"
 
 success() {
     notification -d "emount"
-    notification -t 10 -k "eumount" -a "ecryptfs: unmounting..." &
+    notification -t 10 -k "eumount" -a "ecryptfs: unmounted" &
     echo "[SUCCESS]"
     exit 0
 }
 
 failure() {
     echo "[FAILURE]"
+    notification -k "eumount" -a "ecryptfs: unmounting failed!" &
     exit 1
 }
 

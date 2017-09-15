@@ -3,7 +3,7 @@ SECRET_DIR="sec"
 
 success() {
     # write to statusline
-    notification -k "emount" -a "ecryptfs: mounted" &
+    notification -k "emount" -a "ecryptfs" &
     echo "[SUCCESS]"
     exit 0
 }
