@@ -27,7 +27,8 @@ gen_kv_file() {
     touch "$OUT_FILE"
     chmod 666 "$OUT_FILE"
 
-    lines="$(sed "s/^.*=//g" < "$KEY_VAL_FILE")"
+    # extract values and sort
+    lines="$(sed "s/^.*=//g" < "$KEY_VAL_FILE" | sort)"
     while IFS="" read -r l; do
         [ -n "$l" ] && printf "[%s]" "$l" >> "$OUT_FILE"
     done <<EOF
