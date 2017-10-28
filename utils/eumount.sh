@@ -1,16 +1,22 @@
 #!/bin/sh
-SECRET_DIR="sec"
+if [ -z "$SECRET_DIR" ]; then
+    if [ -n "$1" ]; then
+        SECRET_DIR="$1"
+    else
+        SECRET_DIR="sec"
+    fi
+fi
 
 success() {
-    notification -d "emount"
-    notification -t 10 -k "eumount" -a "ecryptfs: unmounted" &
+    notification -d "emount:$SECRET_DIR"
+    notification -t 10 -k "eumount" -a "ecryptfs: $SECRET_DIR unmounted" &
     echo "[SUCCESS]"
     exit 0
 }
 
 failure() {
     echo "[FAILURE]"
-    notification -k "eumount" -a "ecryptfs: unmounting failed!" &
+    notification -t 30 -k "eumount" -a "ecryptfs: $SECRET_DIR unmounting failed!" &
     exit 1
 }
 

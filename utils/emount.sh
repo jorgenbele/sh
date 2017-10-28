@@ -1,16 +1,22 @@
 #!/bin/sh
-SECRET_DIR="sec"
+if [ -z "$SECRET_DIR" ]; then
+    if [ -n "$1" ]; then
+        SECRET_DIR="$1"
+    else
+        SECRET_DIR="sec"
+    fi
+fi
 
 success() {
     # write to statusline
-    notification -k "emount" -a "ecryptfs" &
+    notification -k "emount:$SECRET_DIR" -a "ecryptfs: $SECRET_DIR" &
     echo "[SUCCESS]"
     exit 0
 }
 
 failure() {
     # write to statusline
-    notification -t 10 -k "emount_failure" -a "ecryptfs: failed" &
+    notification -t 10 -k "emount_failure" -a "ecryptfs: $SECRET_DIR failed" &
     echo "[FAILURE]"
     exit 1
 }
