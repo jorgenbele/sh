@@ -19,7 +19,10 @@ fi
 
 # execute whichever terminal command is found first and exit
 for term in $TERMINALS; do
-    exists $term && $term && exit
+    if exists $term; then
+      $term
+      exit  
+    fi
 done
 
 # Print error
