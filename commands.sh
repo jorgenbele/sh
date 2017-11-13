@@ -2,6 +2,7 @@
 # Author: Jørgen Bele Reinfjell
 # Date: 14.06.2017 [dd.mm.yyyy]
 # Modified: 15.09.2017 [dd.mm.yyyy]
+# Modified: 13.11.2017 [dd.mm.yyyy]
 # File: commands.sh
 # Description:
 #   A collection of useful shell script functions.
@@ -39,6 +40,11 @@ join() {
     shift 1
     printf "$*"
     IFS="$IFSO"
+}
+
+# stripext(string ...): remove the (last) file extension
+stripext() {
+    echo "$@" | sed 's~\..*$~~g'
 }
 
 ## Time
