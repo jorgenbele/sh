@@ -14,11 +14,10 @@ pps() {
     local ts="$1"
     d="$(($ts/(24*3600)))"
     h="$(($ts/(3600)))"
-    m="$((($ts%3600)/60))" 
-    s="$(($ts%60))" 
-    
-    sep=""
+    m="$((($ts%3600)/60))"
+    s="$(($ts%60))"
 
+    sep=""
     [ "$d" -gt 0 ] && printf "%dd" "${d}" && sep="$TIME_SEP"
     [ "$h" -gt 0 ] && printf "%s%dh" "$sep" "${h}" && sep="$TIME_SEP"
     [ "$m" -gt 0 ] && printf "%s%dm" "$sep" "${m}" && sep="$TIME_SEP"
@@ -41,7 +40,6 @@ timer() {
         # Get running time in seconds
         local time="$(tsec)"
         dtf="$(dtime $startt $time)"
-
         # Update notification
         notification -k "timer" -a "$dtf"
         sleep "$SLEEP_TIME"

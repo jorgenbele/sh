@@ -61,7 +61,6 @@ if [ "$INTERACTIVE" ]; then
     done
     set +f; unset IFS             # restore globbing again in case $INPUT was empty
 
-
     # Is interactive
     # Run sorted 'du' on the files, this makes it easier to determine if there is large unwanted files.
     printf "List files: [y/n]: "
