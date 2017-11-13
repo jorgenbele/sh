@@ -1,6 +1,7 @@
 #!/bin/sh
 # Author: Jørgen Bele Reinfjell 
 # Date: xx.07.2017 [dd.mm.yyyy]
+# Modified: 13.11.2017 [dd.mm.yyyy]
 # File: statusbar.sh
 # Description: 
 #   Starts and runs the statusline generator status
@@ -8,7 +9,6 @@
 # Dependencies: status, lemonbar
 
 ### Setup
-
 [ -z "$FONT_SIZE_FILE"   ] && FONT_SIZE_FILE="/tmp/fontsize"
 [ -z "$STATUS_PIPE_FILE" ] && STATUS_FIFO_PATH="/tmp/status.pipe"
 [ -z "$STATUS_PID_FILE"  ] && STATUS_PID_FILE="/tmp/status_pid"
@@ -34,7 +34,6 @@ if [ -z "$FONTSIZE" ]; then
     esac
 fi
 [ -z "$STATUSBAR_FONT"   ] && STATUSBAR_FONT="Source Code Pro:pixelsize=$FONTSIZE:antialias=true"
-
 
 ### Main
 echo "FONT_SIZE_FILE=$FONT_SIZE_FILE" 1>&2
@@ -65,7 +64,7 @@ fi
 echo "Starting status..." 1>&2
 status 2>/dev/null > "$STATUS_FIFO_PATH" &
 status_pid="$!"
-renice 19 -p "$status_pid"
+#renice 19 -p "$status_pid"
 
 # Write pid to file.
 echo "$status_pid" > "$STATUS_PID_FILE"
