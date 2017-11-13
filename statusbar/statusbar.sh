@@ -1,6 +1,7 @@
 #!/bin/sh
 # Author: Jørgen Bele Reinfjell 
 # Date: xx.07.2017 [dd.mm.yyyy]
+# Modified: 13.11.2017 [dd.mm.yyyy]
 # File: statusbar.sh
 # Description: 
 #   Starts and runs the statusline generator status
@@ -8,28 +9,28 @@
 # Dependencies: status, lemonbar
 
 ### Setup
+# Setup font size file for restore and save.
+[ -z "$FONT_SIZE_FILE" ] && FONT_SIZE_FILE="/tmp/fontsize"
+# Try to set fontsize from argument.
+[ -z "$FONTSIZE" ] && [ "$1" -gt 0 ] && FONTSIZE="$1"
+# Try to load from font size file if no font size is already specified.
 if [ -z "$FONTSIZE" ]; then
-    case $# in
-        0) FONTSIZE="23";;
-        *) FONTSIZE="$1";;
-    esac
+    FONTSIZE="$(cat $FONT_SIZE_FILE)"
+    if [ "$FONTSIZE" -le 0 ]; then
+        unset FONTSIZE
+    fi
 fi
 
-if [ -z "$FONT_SIZE_FILE" ]; then
-	FONT_SIZE_FILE="/tmp/fontsize"
-fi
-
-if [ -z "$STATUS_PIPE_FILE" ]; then
-	STATUS_FIFO_PATH="/tmp/status.pipe"
-fi
-
+# If loading from font size file failed, set to default.
+[ -z "$FONTSIZE" ] && FONTSIZE="23"
+# Setup pipe file.
+[ -z "$STATUS_PIPE_FILE" ] && STATUS_FIFO_PATH="/tmp/status.pipe"
+# Setup font.
 if [ -z "$STATUSBAR_FONT" ]; then
-	STATUSBAR_FONT="xft:Source Code Pro:pixelsize=$FONTSIZE:antialias=true"
+	STATUSBAR_FONT="Source Code Pro:pixelsize=$FONTSIZE:antialias=true"
 fi
-
-if [ -z "$STATUS_PID_FILE" ]; then
-    STATUS_PID_FILE="/tmp/status_pid"
-fi
+# Setup pid file.
+[ -z "$STATUS_PID_FILE" ] && STATUS_PID_FILE="/tmp/status_pid"
 
 ### Main
 echo "FONT_SIZE_FILE=$FONT_SIZE_FILE"
@@ -56,9 +57,10 @@ fi
 
 # Start status and pipe it's output to a named pipe.
 # Also set it's priority low.
-status 2>/dev/null > "$STATUS_FIFO_PATH" &
+#status 2>/dev/null > "$STATUS_FIFO_PATH" &
+status > "$STATUS_FIFO_PATH" &
 status_pid="$!"
-renice 19 -p "$status_pid"
+#renice 19 -p "$status_pid"
 
 # Write pid to file.
 echo "$status_pid" > "$STATUS_PID_FILE"
