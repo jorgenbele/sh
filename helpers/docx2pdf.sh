@@ -13,23 +13,31 @@ stripext() {
 }
 
 conv() {
-    pandoc -o "$(stripext "$@").pdf" -f docx "$@"
+    of="$(stripext "$@").pdf"
+    pandoc -o "$of" -f docx "$@"
+    ret="$?"
+    if $LIST && [ "$ret" -eq 0 ]; then
+        echo "$of"
+    fi
+    return "$?"
 }
 
 usage() {
     echo "Usage: $0 [-hv]"
     echo "      -h            display this help and exit"
+    echo "      -l            enable listing of output file name"
     echo "      -v            enable verbose output"
 }
 
 # parse args
 [ "$#" -eq 0 ] && usage 1>%2 # no arguments, display usage
 
-OPTS="hv"
+OPTS="hvl"
 while getopts "$OPTS" arg; do
     case "$arg" in
         'v')     VERBOSE=true; continue ;;
         'h')     usage;        exit 0   ;;
+        'l')     LIST=true;    continue ;;
         '-')     break                  ;;
         *)       echo "Internal error: $arg" 1>&2;  exit 1 ;;
     esac

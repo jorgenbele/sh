@@ -15,6 +15,7 @@ graphics/1440p.sh
 graphics/1800p.sh
 helpers/dmenu_start.sh
 helpers/docx2pdf.sh
+helpers/docx-mupdf.sh
 helpers/readifytxt.sh
 helpers/redshift-enable.sh
 helpers/redshift-disable.sh
