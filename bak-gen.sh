@@ -4,9 +4,11 @@
 # Date: 19.09.2017 [dd.mm.yyyy]
 # File: bak-gen.sh
 
+[ -z "$HOSTNAME" ] && HOSTNAME="$(hostname)"
+
 fextr=".tar.xz"
 uextr="$(date +%Y_%m_%d_%s)"
-fname="backup_${uextr}${fextr}"
+fname="backup_${HOSTNAME}_${uextr}${fextr}"
 #compr="tar -acJv -T - -f $fname --"
 tar_cmd="tar -acv -T - --"
 xz_cmd="xz -z -T 0 - "
