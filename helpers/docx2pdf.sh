@@ -30,7 +30,7 @@ usage() {
 }
 
 # parse args
-[ "$#" -eq 0 ] && usage 1>%2 # no arguments, display usage
+[ "$#" -eq 0 ] && usage 1>&2 # no arguments, display usage
 
 OPTS="hvl"
 while getopts "$OPTS" arg; do
@@ -45,7 +45,7 @@ done
 
 shift $(($OPTIND-1))
 
-[ -z "$1" ] && verbose "Finished, nothing to do." && exit 0
+[ -z "$1" ] && verbose "Finished, nothing to do." && exit 0
 
 failed=0
 while [ -n "$1" ]; do

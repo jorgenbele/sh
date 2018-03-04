@@ -22,6 +22,9 @@ helpers/redshift-disable.sh
 helpers/silent.sh
 helpers/yt.sh
 helpers/yt.sh
+helpers/emacs-client.sh
+helpers/emacs-server.sh
+helpers/officefarm.sh
 statusbar/reset-bar.sh
 statusbar/statusbar.sh
 statusbar/update-bar.sh

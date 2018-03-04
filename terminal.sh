@@ -14,7 +14,7 @@ exists() {
 
 # default TERMINALS string 
 if [ -z "$TERMINALS" ]; then
-    TERMINALS="termite urxvt rxvt-unicode st rxvt xterm"
+    TERMINALS="alacritty termite urxvt rxvt-unicode st rxvt xterm"
 fi
 
 # execute whichever terminal command is found first and exit
