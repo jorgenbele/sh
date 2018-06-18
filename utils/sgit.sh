@@ -131,7 +131,7 @@ usage() {
 	echo
 	echo "    bare    Initializes an empty repository at the remote host"
 	echo
-	echo "    copy	  Copies (and only copies) a local repository"
+	echo "    copy    Copies (and only copies) a local repository"
 	echo "            to the remote host and sets it as a bare repo"
 	echo
 	echo "    remote  Copies local repository to the remote (bare repo)"
