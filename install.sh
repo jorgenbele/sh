@@ -8,26 +8,29 @@
 [ -z "$INSTALL_DIR" ] && INSTALL_DIR="$HOME/bin"
 
 # Newline separated list of files
-FILES="bak-gen.sh
-terminal.sh
+FILES="
+bak-gen.sh
 graphics/1080p.sh
 graphics/1440p.sh
 graphics/1800p.sh
 helpers/dmenu_start.sh
-helpers/docx2pdf.sh
 helpers/docx-mupdf.sh
-helpers/readifytxt.sh
-helpers/redshift-enable.sh
-helpers/redshift-disable.sh
-helpers/silent.sh
-helpers/yt.sh
-helpers/yt.sh
+helpers/docx2pdf.sh
 helpers/emacs-client.sh
 helpers/emacs-server.sh
 helpers/officefarm.sh
+helpers/readifytxt.sh
+helpers/redshift-disable.sh
+helpers/redshift-enable.sh
+helpers/silent.sh
+helpers/yt.sh
+helpers/yt.sh
+rofi/rofi-locate.sh
+rofi/rofi-wallpaper.sh
 statusbar/reset-bar.sh
 statusbar/statusbar.sh
 statusbar/update-bar.sh
+terminal.sh
 unc/beet_cue_ape_split_import.sh
 unc/beet_cue_split_import.sh
 unc/cuetag.sh
@@ -39,6 +42,8 @@ utils/notification.sh
 utils/notification_timer.sh
 utils/prime_run.sh
 utils/run_notification.sh
+utils/sgit.sh
+utils/torrent.sh
 utils/try.sh
 "
 # stripext(string ...): remove the (last) file extension

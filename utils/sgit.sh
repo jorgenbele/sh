@@ -127,9 +127,9 @@ create_bare_copy() {
 
 usage() {
 	echo "Usage: $0 [-v] [bare|copy] REPOSITORY"
-	echo "	  -v      Enable verbose output"
+	echo "    -v      Enable verbose output"
 	echo
-	echo "    bare	  Initializes an empty repository at the remote host"
+	echo "    bare    Initializes an empty repository at the remote host"
 	echo
 	echo "    copy	  Copies (and only copies) a local repository"
 	echo "            to the remote host and sets it as a bare repo"
@@ -162,6 +162,10 @@ case "$1" in
 		setup_remote "$2"
 		create_bare_copy "$2"
 		setup_remote_url "$2"
+		exit 0
+		;;
+	'')
+		usage
 		exit 0
 		;;
 	*) 
