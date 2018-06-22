@@ -45,6 +45,7 @@ utils/run_notification.sh
 utils/sgit.sh
 utils/torrent.sh
 utils/try.sh
+utils/pushbak.sh
 "
 # stripext(string ...): remove the (last) file extension
 stripext() {
