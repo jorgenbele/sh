@@ -7,10 +7,26 @@
 # Description:
 #   A collection of useful shell script functions.
 
+
+# has_cmds: checks if all the given commands exists
+has_commands() {
+	while [ -n "$1" ]; do
+		command -v "$1" > /dev/null || return "$?"
+		shift 1
+	done
+	return 0
+}
+
 # log(...): echos arguments to stderr
 log() {
     echo "$@" 1>&2
 }
+
+# verbose(): prints output only when VERBOSE=true
+verbose() {
+	"$VERBOSE" && log "$@"
+}
+
 
 # cmd_exists(): checks if command exists
 cmd_exists() {
