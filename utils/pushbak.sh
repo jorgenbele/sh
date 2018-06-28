@@ -15,8 +15,22 @@ verbose() {
 	"$VERBOSE" && log "$@"
 }
 
+has_commands() {
+	while [ -n "$1" ]; do
+		command -v "$1" > /dev/null || return "$?"
+		shift 1
+	done
+	return 0
+}
+
+check_deps() {
+	has_commands "rsync" && verbose "All dependencies found"
+}
+
+
 usage() {
 	echo "Usage: $0 [-hv] [-r REMOTE] [-t torrent|local] PATH ..."
+	echo "  -d            exits with no error code if all dependencies are set up"
 	echo "  -h            display this message and quit"
 	echo "  -v            enable verbose output"
 	echo "  -r            specify a remote server to push to, can be repeated"
@@ -134,15 +148,13 @@ push() {
 # Main
 [ "$#" = 0 ] && usage && exit 1
 
-OPTS='hvt:r:'
+OPTS='dhvt:r:'
 TYPE='local'
 while getopts "$OPTS" arg; do
 	case "$arg" in
-		# Help
-		'h') usage; exit 0 ;;
-
-		# Verbosity
-		'v') VERBOSE=true; ;;
+        'd') check_deps; exit "$?"  ;;
+		'h') usage; exit 0; ;;
+		'v') VERBOSE=true;  ;;
 
 		# Type
 		't') 
