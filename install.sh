@@ -41,11 +41,12 @@ utils/eumount.sh
 utils/notification.sh
 utils/notification_timer.sh
 utils/prime_run.sh
+utils/pushbak.sh
 utils/run_notification.sh
 utils/sgit.sh
+utils/skeys.sh
 utils/torrent.sh
 utils/try.sh
-utils/pushbak.sh
 "
 # stripext(string ...): remove the (last) file extension
 stripext() {
