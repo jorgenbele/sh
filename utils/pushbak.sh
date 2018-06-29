@@ -3,7 +3,7 @@
 # Author: Jørgen Bele Reinfjell
 # Date: 22.06.2018 [dd.mm.yyyy]
 # Description: Push files to backup server(s) using rsync.
-# Dependencies: rsync
+dependencies="rsync"
 
 VERBOSE=false
 
@@ -16,17 +16,30 @@ verbose() {
 }
 
 has_commands() {
+    ret=0
 	while [ -n "$1" ]; do
-		command -v "$1" > /dev/null || return "$?"
+		if ! command -v "$1" > /dev/null; then
+            if [ -z "$missing" ]; then
+                missing="$1"
+            else
+                missing="$missing $1"
+            fi
+            ret=1
+        fi
 		shift 1
 	done
-	return 0
+    echo "$missing"
+	return $ret
 }
 
 check_deps() {
-	has_commands "rsync" && verbose "All dependencies found"
+    missing_deps=$(has_commands "$dependencies")
+    if [ "$?" = 0 ]; then
+        verbose "All dependencies found"
+    else
+        verbose "Midding dependencies: $missing_deps"
+    fi
 }
-
 
 usage() {
 	echo "Usage: $0 [-hv] [-r REMOTE] [-t torrent|local] PATH ..."
@@ -35,9 +48,7 @@ usage() {
 	echo "  -v            enable verbose output"
 	echo "  -r            specify a remote server to push to, can be repeated"
 	echo "  -t  TYPE      specified the backup type - one of the following:"
-	echo ""
 	echo "      local     used for files local to the host device "
-	echo ""
 	echo "      torrent   used specifically for torrent files, which"
 	echo "                should be placed in a special directory"
 	echo ""
@@ -150,11 +161,18 @@ push() {
 
 OPTS='dhvt:r:'
 TYPE='local'
+
+while getopts "$OPTS" arg; do
+    case "$arg" in
+        'v') VERBOSE=true;  ;;
+    esac
+done
+OPTIND=1
+
 while getopts "$OPTS" arg; do
 	case "$arg" in
         'd') check_deps; exit "$?"  ;;
 		'h') usage; exit 0; ;;
-		'v') VERBOSE=true;  ;;
 
 		# Type
 		't') 
