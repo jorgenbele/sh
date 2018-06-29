@@ -48,9 +48,9 @@ has_commands() {
 }
 
 check_deps() {
-    missing_deps=$(has_commands "$dependencies")
+    missing_deps=$(has_commands $dependencies)
     if [ "$?" = 0 ]; then
-        verbose "All dependencies found"
+        verbose "All dependencies found: $dependencies"
     else
         verbose "Midding dependencies: $missing_deps"
     fi
@@ -58,18 +58,20 @@ check_deps() {
 
 usage() {
     echo "Usage: $0 [-hlv] [MODE PARAMS]"
-    echo "  -h  display this message and quit"
-    echo "  -v  toggle verbose output"
-    echo "  -m  save metadata from OMDB"
-    echo "  -d  exits with no error code if all dependencies are set up"
-    echo ""
+    echo "  -h  Display this message and quit"
+    echo "  -v  Toggle verbose output"
+    echo "  -m  Save metadata from OMDB"
+    echo "  -d  Exits with no error code if all dependencies are set up"
+    echo
     echo "MODE PARAMS can be one of the following"
-    echo "  -a|add      NAME MAGNET  add a new torrent"
-    echo "  -c|continue NAME         continue torrenting"
-    echo "  -V|visit    NAME         change to a torrents dir"
-    echo "  -l|list                  list all torrents"
-    echo "  -r|remove   NAME         remove torrent (all data) of torrent by name"
-    echo ""
+    echo "  -a|add      NAME MAGNET  Add a new torrent"
+    echo "  -c|continue NAME         Continue torrenting"
+    echo "  -V|visit    NAME         Change to a torrents dir"
+    echo "  -l|list                  List all torrents"
+    echo "  -r|remove   NAME         Remove torrent (all data) of torrent by name"
+    echo
+    echo "Dependencies: $dependencies"
+    echo
     echo "Examples:"
     echo "$0 -vV some_torrent_name"
     echo "$0 -v visit some_torrent_name"
@@ -208,9 +210,15 @@ fi
 opts="hmvdaVlrc"
 while getopts "$opts" arg; do
     case "$arg" in
-        'h') usage; exit 0; ;;
         'm') METADATA=true; ;;
         'v') VERBOSE=true;  ;;
+    esac
+done
+OPTIND=1
+
+while getopts "$opts" arg; do
+    case "$arg" in
+        'h') usage; exit 0; ;;
         'd') check_deps; exit; "$?" ;;
 
         'a') MODE='add'      ;;
