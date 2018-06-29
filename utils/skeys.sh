@@ -5,12 +5,9 @@
 # Description: 
 #     Helper script for starting ssh-agent with shorthand notations
 #     for identities.
-# Dependencies:
-#     ssh-agent
-#     ssh-add
+dependencies="ssh-agent ssh-add"
 
 VERBOSE=false
-SSH_AGENT_STARTED=false
 
 log() {
 	echo "$@" 1>&2
@@ -21,30 +18,38 @@ verbose() {
 }
 
 has_commands() {
+    ret=0
 	while [ -n "$1" ]; do
-		command -v "$1" > /dev/null || return "$?"
+		if ! command -v "$1" > /dev/null; then
+            if [ -z "$missing" ]; then
+                missing="$1"
+            else
+                missing="$missing $1"
+            fi
+            ret=1
+        fi
 		shift 1
 	done
-	return 0
+    echo "$missing"
+	return $ret
 }
 
 check_deps() {
-	has_commands "ssh-agent" "ssh-add" && verbose "All dependencies found"
-}
-
-# start_agent: Starts the ssh-agent.
-start_agent() {
-	verbose "Starting ssh-agent: eval \"$(ssh-agent)"\"
-	eval "$(ssh-agent)"
-	SSH_AGENT_STARTED=true
+    missing_deps=$(has_commands $dependencies)
+    if [ "$?" = 0 ]; then
+        verbose "All dependencies found: $dependencies"
+    else
+        verbose "Midding dependencies: $missing_deps"
+    fi
 }
 
 # load_identity(): Loads a identify from file.
 # $1 - file
 load_identity() {
-	if ! "$SSH_AGENT_STARTED"; then
-		start_agent
-	fi
+    if [ -z "$SSH_AUTH_SOCK" ]; then
+        log "No ssh agent running. Quitting."
+        exit 1
+    fi
 
 	verbose "Loading identity from file: $1"
 	ssh-add "$1"
@@ -76,18 +81,27 @@ usage() {
 	echo "  -h        display this message and quit"
 	echo "  -v        enable verbose output"
 	echo "  -f FILE   load identity from the specified file"
-	echo ""
+	echo
+    echo "Dependencies: $dependencies"
+    echo
 	echo "Env variables: Loads all identities specified in the newline 
           separated list of paths in IDENTITY_FILES "
 	echo "Example: $0 -v -f some_file github_id_rsa gitlab_id_rsa"
 }
 
 opts="dhvf:"
+# Parse flags first.
+while getopts "$opts" arg; do
+	case "$arg" in
+		'v') VERBOSE=true;  ;;
+		'h') usage; exit 0; ;;
+	esac
+done
+
+OPTIND=1
 while getopts "$opts" arg; do
 	case "$arg" in
 		'd') check_deps; exit "$?"   ;;
-		'v') VERBOSE=true;  ;;
-		'h') usage; exit 0; ;;
 		'f') load_identity "$OPTARG" ;; # load using filename directly
 	esac
 done
