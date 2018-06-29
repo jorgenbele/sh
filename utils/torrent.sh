@@ -2,34 +2,100 @@
 # File: torrent.sh
 # Date: 06.05.2018 [dd.mm.yyyy]
 # Author: Jørgen Bele Reinfjell
+dependencies="aria2c"
 
-DEST_DIR="$HOME/dls/torrent"
-MAGNET_FILE="magnet.txt"
+# Use environment variables if set.
+[ -z "$DEST_DIR"      ] && DEST_DIR="$HOME/dls/torrent"
+[ -z "$MAGNET_FILE"   ] && MAGNET_FILE="magnet.txt"
+[ -z "$METADATA"      ] && METADATA=false
+[ -z "$METADATA_FILE" ] && METADATA_FILE="meta.json"
+[ -z "$OMDB_API_KEY"  ] && OMDB_API_KEY=""
+[ -z "$VERBOSE"       ] && VERBOSE=false
 
-VERBOSE=false
-METADATA=false
-METADATA_FILE="meta.json"
-OMDB_API_KEY=""
+HAS_SETUP=false
 
-usage() {
-    printf "Usage: %s [-hlv] [-a NAME MAGNET] [-[cdr] NAME]\n" "$0"
-    printf   "    -h|help                 display this message and quit\n"
-    printf   "    -v|verbose              toggle verbose output\n"
-    printf   "    -m|metadata             save metadata from OMDB\n"
-    printf   "    -a|add      NAME MAGNET add a new torrent\n"
-    printf   "    -c|continue NAME        continue torrenting\n"
-    printf   "    -d|visit    NAME        change to a torrents dir\n"
-    printf   "    -l|list                 list all torrents\n"
-    printf   "    -r|remove   NAME        remove torrent (all data) of torrent by name\n"
+log() {
+    echo "$@" 1>&2
 }
 
-# sets up directories
-setup() {
-    if ! [ -d "$DEST_DIR" ]; then 
-        mkdir -p "$DEST_DIR" || echo "Unable to create dest parent directory $DEST_DIR" && exit 1
+logf() {
+    printf "$@" 1>&2
+}
+
+verbose() {
+    "$VERBOSE" && log "$@"
+}
+
+verbosef() {
+    "$VERBOSE" && logf "$@"
+}
+
+has_commands() {
+    ret=0
+    while [ -n "$1" ]; do
+        if ! command -v "$1" > /dev/null; then
+            if [ -z "$missing" ]; then
+                missing="$1"
+            else
+                missing="$missing $1"
+            fi
+            ret=1
+        fi
+        shift 1
+    done
+    echo "$missing"
+    return $ret
+}
+
+check_deps() {
+    missing_deps=$(has_commands "$dependencies")
+    if [ "$?" = 0 ]; then
+        verbose "All dependencies found"
+    else
+        verbose "Midding dependencies: $missing_deps"
     fi
 }
 
+usage() {
+    echo "Usage: $0 [-hlv] [MODE PARAMS]"
+    echo "  -h  display this message and quit"
+    echo "  -v  toggle verbose output"
+    echo "  -m  save metadata from OMDB"
+    echo "  -d  exits with no error code if all dependencies are set up"
+    echo ""
+    echo "MODE PARAMS can be one of the following"
+    echo "  -a|add      NAME MAGNET  add a new torrent"
+    echo "  -c|continue NAME         continue torrenting"
+    echo "  -V|visit    NAME         change to a torrents dir"
+    echo "  -l|list                  list all torrents"
+    echo "  -r|remove   NAME         remove torrent (all data) of torrent by name"
+    echo ""
+    echo "Examples:"
+    echo "$0 -vV some_torrent_name"
+    echo "$0 -v visit some_torrent_name"
+}
+
+# setup(): Creates the necessary directories needed to use this script.
+# sets up directories
+setup() {
+    if ! [ -d "$DEST_DIR" ]; then 
+        if ! mkdir -p "$DEST_DIR"; then
+            log "Unable to create dest parent directory: $DEST_DIR"
+            exit 1
+        fi
+        log "Created dest parent directory: $DEST_DIR"
+    fi
+}
+
+# setup_if_needed(): Make sure that setup() is only called once. 
+setup_if_needed() {
+    if ! "$HAS_SETUP"; then
+        setup
+    fi
+}
+
+# snakecase_inp(): Converts a string from uppercase to
+#                  and lowercase and replaces spaces with underscores.
 # stdin - input text
 snakecase_inp() {
     # Inspired from https://stackoverflow.com/questions/4569825/sed-one-liner-to-convert-all-uppercase-to-lowercase
@@ -37,87 +103,96 @@ snakecase_inp() {
     tr '[:upper:] ' '[:lower:]_' 
 }
 
+# remove(): Removes a torrent and its related directories and files.
 # $1 - name
 remove() {
-    # remove directory if it exists
-    local dir="$DEST_DIR/$(echo "$1" | snakecase_inp)"
+    setup_if_needed
+    destdir="$DEST_DIR/$(echo "$1" | snakecase_inp)"
 
-    if ! [ -d "$dir" ]; then
-        echo "Torrent directory: \"$dir\" does not exist" 1>&2
+    if ! [ -d "$destdir" ]; then
+        log "Torrent directory: \"$destdir\" does not exist"
         exit 1
     fi
 
-    $VERBOSE && echo "Removing directory: \"$dir\" using: rm -r \"$dir\"" 1>&2
-    #rm -r "$dir"
+    verbose "Removing directory: \"$destdir\" using: rm -r \"$destdir\""
+    #rm -r "$destdir"
 }
 
+# NOTE: Not implemented.
 # $1 - name
 metadata() {
     # TODO
     echo "$1"
 }
 
+# NOTE: Not implemented.. 
+# write_metadata(): Write metadata fetched from OMDB for the given torrent.
 # $1 - name
 write_metadata() {
-        local metadir="$dir/$METADATA_FILE"
-        $VERBOSE && echo "Searching for metadata using OMDB for: \"$1\"" 1>&2
-        local meta="$(metadata "$1")"
-        if [ "$?" != 0 ]; then
-            $VERBOSE && echo "Failed to get metadata for: \"$1\"" 1>&2
-        fi
-        echo "$meta" > "$METADATA_FILE"
-        $VERBOSE && echo "Wrote metadata file: \"$1\"" 1>&2
+    setup_if_needed
+    metadir="$destdir/$METADATA_FILE"
+    verbose "Searching for metadata using OMDB for: \"%s\"" "$1"
+    meta="$(metadata "$1")"
+    if [ "$?" != 0 ]; then
+        verbose "Failed to get metadata for: \"$1\""
+    fi
+    echo "$meta" > "$METADATA_FILE"
+    verbose "Wrote metadata file: \"$1\""
 }
 
+# add(): Adds a torrent by name and magnet link.
 # $1 - name
 # $2 - magnet link
 add() {
-    # make sure it does not already exist
-    local dir="$DEST_DIR/$(echo "$1" | snakecase_inp)"
-    $VERBOSE && echo "Creating directory: \"$dir\"" 1>&2
+    setup_if_needed
+    destdir="$DEST_DIR/$(echo "$1" | snakecase_inp)"
+    verbosef "Creating directory: \"%s\"\n" "$destdir"
 
-    if ! [ -d "$dir" ] && ! mkdir -p "$dir"; then
-        echo "Failed to create torrent directory: \"$dir\"" 1>&2
+    if ! [ -d "$destdir" ] && ! mkdir -p "$destdir"; then
+        log "Failed to create torrent directory: \"%s\"" "$destdir"
         exit 1
     fi
 
-    $VERBOSE && echo "Saving magnet link as: \"$dir/$MAGNET_FILE\"" 1>&2
-    echo "$2" > "$dir/$MAGNET_FILE"
+    verbosef "Saving magnet link as: \"%s\"\n" "$destdir/$MAGNET_FILE"
+    echo "$2" > "$destdir/$MAGNET_FILE"
 
     if "$METADATA"; then
         write_metadata "$1" &
     fi
 
-    $VERBOSE && echo "Starting aria2c in directory: \"$dir\"" 1>&2
-    $VERBOSE && echo "aria2c -d "$dir" "$2"" 1>&2
-    aria2c -d "$dir" "$2"
+    verbose "Starting aria2c in directory: \"$destdir\""
+    verbose "aria2c -d "$destdir" "$2""
+    aria2c -d "$destdir" "$2"
 }
 
+# continue_(): Continues a torrent by name.
 # $1 - name
 continue_() {
-    # make sure it does not already exist
-    local dir="$DEST_DIR/$(echo "$1" | snakecase_inp)"
-    $VERBOSE && echo "Continuing: \"$1\"" 1>&2
+    setup_if_needed
+    destdir="$DEST_DIR/$(echo "$1" | snakecase_inp)"
+    verbosef "Continuing: \"%s\"\n" "$1"
 
-    local magnet="$(cat "$dir/$MAGNET_FILE")"
-    $VERBOSE && printf "Magnet link: \n%s\n" "$magnet" 1>&2
+    magnet="$(cat "$destdir/$MAGNET_FILE")"
+    verbosef "Magnet link: \n%s\n" "$magnet"
 
-    $VERBOSE && echo "(continuing) Starting aria2c in directory: \"$dir\"" 1>&2
-    $VERBOSE && echo "aria2c -d "$dir" "$2"" 1>&2
-    aria2c --continue -d "$dir" "$2"
+    verbosef "(continuing) Starting aria2c in directory: \"%s\"\n" "$destdir"
+    verbosef "aria2c --continue -d \"%s\" \"%s\"\n" "$destdir" "$2"
+    aria2c --continue -d "$destdir" "$2"
 }
 
+# visit(): Spawns a subshell in the desired torrents directory.
 # $1 - name
 visit() {
-    # make sure it does not already exist
-    local dir="$DEST_DIR/$(echo "$1" | snakecase_inp)"
-    $VERBOSE && echo "Visiting: \"$dir\"" 1>&2
-    cd "$dir"
-    sh
+    setup_if_needed
+    destdir="$(echo $DEST_DIR/*$(echo "$1" | snakecase_inp)*)"
+    verbosef "Visiting: \"%s\"\n" "$destdir"
+    env -C "$destdir" "$SHELL"
 }
 
 list() {
-    ls "$DEST_DIR"
+    #ls -Alh "$DEST_DIR" | tail -n 1
+    verbose du -chsS "$DEST_DIR/"*
+    du -chsS "$DEST_DIR/"*
 }
 
 ##########
@@ -127,61 +202,66 @@ if [ "$#" = 0 ]; then
     usage && exit 1
 fi
 
-setup
+# NOTE: I chose to do the parsing in two parts due to the
+# need to enable toggles before execution of any commands.
+# This means that the -v (verbose) toggle is position independent.
+opts="hmvdaVlrc"
+while getopts "$opts" arg; do
+    case "$arg" in
+        'h') usage; exit 0; ;;
+        'm') METADATA=true; ;;
+        'v') VERBOSE=true;  ;;
+        'd') check_deps; exit; "$?" ;;
 
-OPTS=""
-while true; do
-    case "$1" in
-        '-a'|'add')    
-            add "$2" "$3";
-            shift 3
-            ;;
-        '-c'|'continue')    
-            # continue
-            continue_ "$2";
-            shift 2;
-            ;;
-        '-d'|'visit')    
-            # visit
-            visit "$2";
-            shift 2;
-            ;;
-        '-h'|'help')    
-            # help
-            usage;
-            shift 1;
-            exit 0
-            ;;
-        '-l'|'list')    
-            # list
-            list;
-            shift 1;
-            exit 0
-            ;;
-        '-m'|'metadata')    
-            # metadata
-            METADATA=true;
-            shift 1;
-            ;;
-        '-r'|'remove')    
-            # remove
-            remove "$2";
-            shift 2;
-            ;;
-        '-v')    
-            # verbose
-            VERBOSE=true;
-            shift 1
-            ;;
-        '--') 
-            # treat all remaining arguments as non-flags
-            shift 1;
-            break
-            ;;
-        *) 
-            # unsupported
-            echo "Internal error: $1" 1>&2;
-            exit 1
-            ;;
+        'a') MODE='add'      ;;
+        'V') MODE='visit'    ;;
+        'l') MODE='list'     ;;
+        'r') MODE='remove'   ;;
+        'c') MODE='continue' ;;
+        '?') log "Unknown option: $arg. Quitting."; exit 3 ;;
     esac
 done
+
+shift "$(($OPTIND-1))"
+
+# Optionally one can specify the mode using a long-hand
+# positional argument following all toggles.
+if [ -z "$MODE" ]; then
+    if [ -z "$1" ]; then
+        usage; exit 1;
+    else
+        verbose "No mode provided by flags. Using $1."
+        MODE="$1"
+        shift 1
+    fi
+fi
+
+# Handle list on its own since it does not
+# need a torrent name.
+case "$MODE" in
+    l*)
+        list
+        exit "$?"
+        ;;
+esac
+
+nameopt="$1"
+magnetopt="$2"
+
+if [ -z "$nameopt" ]; then
+    log "No torrent name provided. Quitting."
+    exit 1
+fi
+
+case "$MODE" in
+    a*)
+        if [ -z "$magnetopt" ]; then
+            log "No magnet link provided. Quitting."
+            exit 2
+        fi
+        add       "$nameopt" "$magnetopt";
+        ;;
+    v*) visit     "$nameopt"; ;;
+    r*) remove    "$nameopt"; ;;
+    c*) continue_ "$nameopt"; ;;
+esac
