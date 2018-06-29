@@ -9,12 +9,33 @@
 
 
 # has_cmds: checks if all the given commands exists
+# returns a list of the missing dependencies
 has_commands() {
+    ret=0
 	while [ -n "$1" ]; do
-		command -v "$1" > /dev/null || return "$?"
+		if ! command -v "$1" > /dev/null; then
+            if [ -z "$missing" ]; then
+                missing="$1"
+            else
+                missing="$missing $1"
+            fi
+            ret=1
+        fi
 		shift 1
 	done
-	return 0
+    echo "$missing"
+	return $ret
+}
+
+# check_deps: uses has_commands() to check if deps in $dependencies are resolved.
+# stdout - the user readable results
+check_deps() {
+    missing_deps=$(has_commands $dependencies)
+    if [ "$?" = 0 ]; then
+        verbose "All dependencies found: $dependencies"
+    else
+        verbose "Midding dependencies: $missing_deps"
+    fi
 }
 
 # log(...): echos arguments to stderr
