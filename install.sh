@@ -8,7 +8,7 @@
 [ -z "$INSTALL_DIR" ] && INSTALL_DIR="$HOME/bin"
 
 # Newline separated list of files
-FILES="
+FILES='
 bak-gen.sh
 graphics/1080p.sh
 graphics/1440p.sh
@@ -47,7 +47,22 @@ utils/sgit.sh
 utils/skeys.sh
 utils/torrent.sh
 utils/try.sh
-"
+'
+
+VERBOSE=false
+
+log() {
+	echo "$@" 1>&2
+}
+
+logf() {
+	printf "$@" 1>&2
+}
+
+verbose() {
+	"$VERBOSE" && log "$@"
+}
+
 # stripext(string ...): remove the (last) file extension
 stripext() {
     echo "$@" | sed 's~\..*$~~g'
@@ -58,18 +73,67 @@ installpath() {
     echo "${INSTALL_DIR}/$(stripext $(basename $1))"
 }
 
+usage() {
+    echo "Usage: $0 [-hv]"
+}
+
+opts="hv"
+while getopts "$opts" arg; do
+    case "$arg" in
+        'h') usage; exit 0; ;;
+        'v') VERBOSE=true;  ;;
+    esac
+done
+
 # Convert DIRS and FILES to nul-terminated strings, store in temp file (for use by du)
 # Source: https://unix.stackexchange.com/questions/102891/posix-compliant-way-to-work-with-a-list-of-filenames-possibly-with-whitespace
 set -f; IFS='
     '                             # turn off variable value expansion except for splitting at newlines
+
+## Copy files
+FILE_DESTS="" # list of destination paths separated by newlines
 for path in $FILES; do
     set +f; unset IFS         # restore globbing and field splitting at all whitespace
     inspath="$(installpath "$path")"
-    cp "$path" "$inspath"
-    echo cp "$path" "$inspath"
 
-    chmod +x "$inspath"
-    echo chmod +x "$inspath"
+    FILE_DESTS="$FILE_DESTS
+$inspath"
+
+    if "$VERBOSE"; then
+        logf "Copying $path\n"
+    else
+        logf "Copying $path: "
+    fi
+    verbose cp "$path" "$inspath"
+    if cp -u "$path" "$inspath"; then
+        if "$VERBOSE"; then
+            log "Success"
+        else
+            logf "SUCCESS\n"
+        fi
+    else
+        if "$VERBOSE"; then
+            logf "Failure"
+        else
+            logf "FAILURE\n"
+        fi
+    fi
+
 done
 set +f; unset IFS             # restore globbing again in case $INPUT was empty
+
+## Change permissions
+# Set permissions for all files in one go
+# turn off variable value expansion except for splitting at newlines
+set -f; IFS='
+'
+logf "Setting permissions: "
+if chmod +x $FILE_DESTS; then
+    logf "SUCCESS\n"
+else
+    logf "FAILURE\n"
+fi
+
+set +f; unset IFS
+
 echo "Done."
