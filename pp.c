@@ -52,7 +52,7 @@ struct module {
 
 /* Globals. */
 bool verbose_output = false;
-const char *outfile = "outfile";
+const char *outfile = NULL;
 
 
 void verbosef(const char *fmt, ...) {
@@ -581,7 +581,7 @@ bool parse_next_func(FILE *f, struct function *func) {
                 }
                 break;
 
-            no_function:
+                no_function:
                 s = FP_IDENT;
                 free(identstr);
                 identstr = NULL;
@@ -613,7 +613,9 @@ void pushfunc(struct module *m, struct function *f) {
     m->funcv[m->funcc++] = f;
 }
 
-bool process_scripts(const char *spath, const char *ext, struct module *modulev, size_t modulec) {
+bool process_scripts(const char *spath, FILE *out, struct module *modulev, size_t modulec) {
+#define MODULE_INDEX 3
+#define FUNCTION_INDEX 5
     verbosef("Processing script: %s\n", spath);
 
     FILE *f = fopen(spath, "r");
@@ -625,27 +627,10 @@ bool process_scripts(const char *spath, const char *ext, struct module *modulev,
     char *b = NULL;
     size_t bs = 0;
 
-    FILE *out;
-    if (ext == NULL) {
-        out = stdout;
-    } else {
-        char *outpath = NULL;
-        size_t outsize = 0;
-        size_t outi = 0;
-        pushstrn(&outpath, &outsize, &outi, spath, strlen(spath));
-        pushstrn(&outpath, &outsize, &outi, ext, strlen(ext));
-        outpath[outi] = '\0';
-        out = fopen(outpath, "w");
-        free(outpath);
-    }
-
-
     bool done = false;
     bool ok = true;
 
     size_t stage = 0;
-    #define MODULE_INDEX 3
-    #define FUNCTION_INDEX 5
     const char *stages_str[] = {"#", "!", "import", NULL, ".", NULL};
     const size_t nstages = sizeof(stages_str)/sizeof(*stages_str);
 
@@ -676,17 +661,32 @@ bool process_scripts(const char *spath, const char *ext, struct module *modulev,
                 continue;
             }
 
-            struct function *f = find_function(m, b_saved[FUNCTION_INDEX]);
-            if (!f) {
-                errorf("Unable to find function: '%s' in module: '%s'\n", b_saved[FUNCTION_INDEX], b_saved[MODULE_INDEX]);
-                ok = false;
-                continue;
+            if (!strcmp(b_saved[FUNCTION_INDEX], "*")) {
+                /* All functions should be imported. */
+                fprintf(out, "### Auto-imported from %s\n", b_saved[MODULE_INDEX]);
+                fprintf(out, "#======================\n");
+                for (size_t i = 0; i < m->funcc; i++) {
+                    // Reuse b to store function
+                    func_tostr(m->funcv[i], &b, &bs);
+                    // Write
+                    fprintf(out, "%s\n", b); // NOTE: newline
+                }
+                fprintf(out, "#======================\n\n");
+            } else {
+                struct function *f = find_function(m, b_saved[FUNCTION_INDEX]);
+                if (!f) {
+                    errorf("Unable to find function: '%s' in module: '%s'\n", b_saved[FUNCTION_INDEX], b_saved[MODULE_INDEX]);
+                    ok = false;
+                    continue;
+                }
+
+                // Reuse b to store function
+                func_tostr(f, &b, &bs);
+                // Write
+                fprintf(out, "#### Auto-imported from %s\n", b_saved[MODULE_INDEX]);
+                fprintf(out, "%s\n\n", b); // NOTE: newline
             }
 
-            // Reuse b to store function
-            func_tostr(f, &b, &bs);
-            // Write
-            fprintf(out, "%s\n", b); // NOTE: newline
             // Reset and release resources.
             stage = 0;
             for (size_t i = 0; i < nstages; i++) {
@@ -749,11 +749,11 @@ bool process_scripts(const char *spath, const char *ext, struct module *modulev,
     }
 
     free(b);
-
-    fclose(out);
     fclose(f);
 
     return true;
+#undef MODULE_INDEX
+#undef FUNCTION_INDEX
 }
 
 /* ALLOCS */
@@ -768,7 +768,6 @@ bool parse_module(const char *mpath, struct module *mout) {
 
     mout->name = modulename(mpath);
     verbosef("==Parsed modulename of %s as %s.\n", mpath, mout->name);
-
 
     bool ok = true;
     while (ok) {
@@ -850,13 +849,22 @@ int main(int argc, char *argv[]) {
     /* Parse modules. */
     for (int i = 0; i < mi; i++) {
         parse_module(module_paths[i], &modules[i]);
-        //list_funcs(&modules[i]);
+    }
+
+    FILE *out = outfile ? fopen(outfile, "w") : stdout;
+    if (!out) {
+        perror("fopen()");
+        free(module_paths);
+        free(scripts);
+        return 1;
     }
 
     /* Process input scripts. */
     for (int i = 0; i < si; i++) {
-        process_scripts(scripts[i], NULL, modules, mi);
+        process_scripts(scripts[i], out, modules, mi);
     }
+
+    fclose(out);
 
     /* Cleanup. */
     for (int i = 0; i < mi; i++) {
