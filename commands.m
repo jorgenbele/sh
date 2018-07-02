@@ -7,6 +7,41 @@
 # Description:
 #   A collection of useful shell script functions.
 
+# default_setup: helper function which sets up
+# default parameters and options for my scripts.
+default_setup() {
+    VERBOSE=false
+    default_opts "$@"
+}
+
+# default_opts: helper function passing my minimum
+# requirements for displaying usage text
+# Comes along with default_opts..
+default_usage() {
+    echo "Usage: $0 [-dhv] $USAGE_TEXT"
+}
+
+# default_opts: helper function passing my minimum
+# requirements for parsing the have for script arguments.
+default_opts() {
+    opts="vdh"
+    while getopts "$opts" arg; do
+        case "$arg" in
+            'v') VERBOSE=true; ;;
+        esac
+    done
+    OPTIND=1;
+
+    while getopts "$opts" arg; do
+        case "$arg" in
+            'd') check_deps; exit "$?";          ;;
+            'h')
+                default_usage
+                exit 0; ;;
+            '?') log "Internal error: $arg" ;;
+        esac
+    done
+}
 
 # has_cmds: checks if all the given commands exists
 # returns a list of the missing dependencies
@@ -34,13 +69,29 @@ check_deps() {
     if [ "$?" = 0 ]; then
         verbose "All dependencies found: $dependencies"
     else
-        verbose "Midding dependencies: $missing_deps"
+        verbose "Missing dependencies: $missing_deps"
     fi
 }
 
-# log(...): echos arguments to stderr
+# log(...): echo for logging
 log() {
-    echo "$@" 1>&2
+    echo "$@"
+}
+
+# logf(...): printf for logging
+logf() {
+    printf "$@"
+}
+
+
+# error(...): echo redirected to stderr for errors.
+error() {
+    printf "$@" 1>&2
+}
+
+# errorf(...): printf redirected to stderr for errors.
+errorf() {
+    printf "$@" 1>&2
 }
 
 # verbose(): prints output only when VERBOSE=true
@@ -48,6 +99,9 @@ verbose() {
 	"$VERBOSE" && log "$@"
 }
 
+verbosef() {
+    "$VERBOSE" && logf "$@"
+}
 
 # cmd_exists(): checks if command exists
 cmd_exists() {
@@ -154,4 +208,10 @@ abs() {
     if [ "$x" -lt 0 ]; then
         echo "$((-$x))"
     fi
+}
+
+# is_number(x): returns true if x is a string of 10-desimal digits.
+is_number() {
+    echo "$1" | grep '^[0-9][0-9]*[\.]*[0-9]*$' > /dev/null
+    return "$?"
 }
