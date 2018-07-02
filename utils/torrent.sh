@@ -2,6 +2,14 @@
 # File: torrent.sh
 # Date: 06.05.2018 [dd.mm.yyyy]
 # Author: Jørgen Bele Reinfjell
+
+#!import commands.verbose
+#!import commands.verbosef
+#!import commands.log
+#!import commands.logf
+#!import commands.has_commands
+#!import commands.check_deps
+
 dependencies="aria2c"
 
 # Use environment variables if set.
@@ -13,48 +21,6 @@ dependencies="aria2c"
 [ -z "$VERBOSE"       ] && VERBOSE=false
 
 HAS_SETUP=false
-
-log() {
-    echo "$@" 1>&2
-}
-
-logf() {
-    printf "$@" 1>&2
-}
-
-verbose() {
-    "$VERBOSE" && log "$@"
-}
-
-verbosef() {
-    "$VERBOSE" && logf "$@"
-}
-
-has_commands() {
-    ret=0
-    while [ -n "$1" ]; do
-        if ! command -v "$1" > /dev/null; then
-            if [ -z "$missing" ]; then
-                missing="$1"
-            else
-                missing="$missing $1"
-            fi
-            ret=1
-        fi
-        shift 1
-    done
-    echo "$missing"
-    return $ret
-}
-
-check_deps() {
-    missing_deps=$(has_commands $dependencies)
-    if [ "$?" = 0 ]; then
-        verbose "All dependencies found: $dependencies"
-    else
-        verbose "Midding dependencies: $missing_deps"
-    fi
-}
 
 usage() {
     echo "Usage: $0 [-hlv] [MODE PARAMS]"

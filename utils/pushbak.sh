@@ -3,43 +3,15 @@
 # Author: Jørgen Bele Reinfjell
 # Date: 22.06.2018 [dd.mm.yyyy]
 # Description: Push files to backup server(s) using rsync.
+
+#!import commands.verbose
+#!import commands.log
+#!import commands.has_commands
+#!import commands.check_deps
+
 dependencies="rsync"
 
 VERBOSE=false
-
-log() {
-	echo "$@" 1>&2
-}
-
-verbose() {
-	"$VERBOSE" && log "$@"
-}
-
-has_commands() {
-    ret=0
-	while [ -n "$1" ]; do
-		if ! command -v "$1" > /dev/null; then
-            if [ -z "$missing" ]; then
-                missing="$1"
-            else
-                missing="$missing $1"
-            fi
-            ret=1
-        fi
-		shift 1
-	done
-    echo "$missing"
-	return $ret
-}
-
-check_deps() {
-    missing_deps=$(has_commands "$dependencies")
-    if [ "$?" = 0 ]; then
-        verbose "All dependencies found"
-    else
-        verbose "Midding dependencies: $missing_deps"
-    fi
-}
 
 usage() {
 	echo "Usage: $0 [-hv] [-r REMOTE] [-t torrent|local] PATH ..."

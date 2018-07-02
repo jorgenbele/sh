@@ -4,6 +4,10 @@
 # File: change-dpi.sh
 # Description: Changes the xft font dpi by merging X resources.
 # Dependencies: xrdb
+#!import commands.*
+dependencies="xrdb"
+USAGE_TEXT="DPI"
+default_setup "$@"
 
 change_dpi() {
     tmpf="$(mktemp)"
@@ -12,10 +16,10 @@ change_dpi() {
     rm "$tmpf"
 }
 
-case "$1" in
-    ""|"-h") echo "Usage: $0 [-h] <dpi>"
-        ;;
-    *) change_dpi "$1"
-        ;;
-esac
+if [ -z "$1" ]; then
+    default_usage
+    exit 1
+fi
+
+change_dpi "$1"
 

@@ -4,6 +4,10 @@
 # Author: gotbletu
 # Modified: Jørgen Bele Reinfjell
 # Modification date: 04.03.2018 [dd.mm.yyyy]
+#!import commands.*
+dependencies="rofi locate feh"
+default_opts "$@"
+
 set_wallpaper() {
     cp "$1" "$HOME/.wallpaper"
 

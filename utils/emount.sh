@@ -1,4 +1,14 @@
 #!/bin/sh
+# File: emount.sh
+# Author: Jørgen Bele Reinfjell
+# Date: xx.xx.2016 [dd.mm.yyyy] (estimate)
+# Description: Script for mounting an ecryyptfs container.
+
+#!import commands.*
+dependencies="ecryptfs-insert-wrapped-passphrase-into-keyring mount.ecryptfs_private notification"
+USAGE_TEXT="[CONTAINER]"
+default_setup "$@"
+
 if [ -z "$SECRET_DIR" ]; then
     if [ -n "$1" ]; then
         SECRET_DIR="$1"

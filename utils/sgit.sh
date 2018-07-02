@@ -28,6 +28,12 @@
 #	git
 #	ssh
 #	rsync
+
+#!import commands.verbose
+#!import commands.log
+#!import commands.has_commands
+#!import commands.check_deps
+
 dependencies="git ssh rsync"
 
 VERBOSE=false
@@ -36,39 +42,6 @@ VERBOSE=false
 [ -z "$GIT_USER"   ] && GIT_USER="git"
 [ -z "$GIT_SUDIR"  ] && GIT_SUBDIR="$USER"
 
-verbose() {
-	"$VERBOSE" && log "$@"
-}
-
-log() {
-	echo "$@" 1>&2
-}
-
-has_commands() {
-    ret=0
-	while [ -n "$1" ]; do
-		if ! command -v "$1" > /dev/null; then
-            if [ -z "$missing" ]; then
-                missing="$1"
-            else
-                missing="$missing $1"
-            fi
-            ret=1
-        fi
-		shift 1
-	done
-    echo "$missing"
-	return $ret
-}
-
-check_deps() {
-    missing_deps=$(has_commands $dependencies)
-    if [ "$?" = 0 ]; then
-        verbose "All dependencies found: $dependencies"
-    else
-        verbose "Midding dependencies: $missing_deps"
-    fi
-}
 
 # execute_remote(): Executes a command on the remote server.
 execute_remote() {

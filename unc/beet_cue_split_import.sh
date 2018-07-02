@@ -7,21 +7,28 @@
 #   them and then imports them into your beets library.
 # Dependencies: beet, cuetag.sh, shnsplit 
 #       (cuetools useually comes with cuetag and shnsplit)
+#!import commands.*
+dependencies="beet cuetag.sh shnsplit"
+USAGE_TEXT="CUESHEET FLAC_FILE"
+default_setup "$@"
 
 if [ "$1" = "" ] || [ "$2" = "" ]; then
-    echo "Usage: $0 CUESHEET FLAC_FILE"
+    default_usage
     exit 1
 fi
 
 # split files
 splitdir="$(dirname "$2")/splits"
+verbose mkdir "$splitdir"
 mkdir "$splitdir"
+verbose shnsplit -d "$splitdir" -f "$1" -o flac "$2" 
 shnsplit -d "$splitdir" -f "$1" -o flac "$2" 
 
 # tag files 
-echo "tagging..."
-
+log "Tagging files.."
+verbose cuetag.sh "$1" "$splitdir"/*.flac
 cuetag.sh "$1" "$splitdir"/*.flac
 
-echo "importing..."
+log "Importing..."
+verbose beet import "$splitdir"
 beet import "$splitdir"
