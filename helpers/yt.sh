@@ -4,4 +4,8 @@
 # File: yt.sh
 # Description: 
 #   Runs mpv (uses youtube-dl) to play file/stream/url from clipboard.
+#!import commands.*
+dependencies="mpv xclip"
+default_setup "$@"
+
 mpv $(xclip -o)

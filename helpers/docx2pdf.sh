@@ -4,13 +4,16 @@
 # File: docx2pdf.sh
 # Description: Converts docx files to pdf using pandoc.
 # Dependencies: pandoc
-verbose() {
-    [ -n "$VERBOSE" ] && echo "$@"
-}
 
-stripext() {
-    echo "$@" | sed 's~\..*$~~g'
-}
+#!import commands.verbose
+#!import commands.log
+#!import commands.has_commands
+#!import commands.check_deps
+#!import commands.stripext
+
+dependencies="pandoc"
+
+VERBOSE=false
 
 conv() {
     of="$(stripext "$@").pdf"
@@ -24,22 +27,30 @@ conv() {
 
 usage() {
     echo "Usage: $0 [-hv]"
-    echo "      -h            display this help and exit"
-    echo "      -l            enable listing of output file name"
-    echo "      -v            enable verbose output"
+    echo "  -h  Display this help and exit"
+    echo "  -l  Enable listing of output file name"
+    echo "  -v  Enable verbose output"
+    echo "  -d  Exits with no error code if all dependencies are set up"
 }
 
 # parse args
 [ "$#" -eq 0 ] && usage 1>&2 # no arguments, display usage
 
-OPTS="hvl"
+OPTS="dhvl"
 while getopts "$OPTS" arg; do
     case "$arg" in
-        'v')     VERBOSE=true; continue ;;
-        'h')     usage;        exit 0   ;;
-        'l')     LIST=true;    continue ;;
-        '-')     break                  ;;
-        *)       echo "Internal error: $arg" 1>&2;  exit 1 ;;
+        'v') VERBOSE=true; continue; ;;
+    esac
+done
+OPTIND=1
+
+while getopts "$OPTS" arg; do
+    case "$arg" in
+        'd') check_deps; exit "$?"; ;;
+        'h') usage; exit 0;         ;;
+        'l') LIST=true; continue;   ;;
+        '-') break;                 ;;
+        '?') log "Internal error: $arg"; exit 1; ;;
     esac
 done
 
@@ -57,7 +68,7 @@ while [ -n "$1" ]; do
 done
 
 if [ "$failed" -gt 0 ]; then
-    echo "Finished with $failed errors." 1>&2
+    log "Finished with $failed errors." 1>&2
     exit 1
 fi
 
