@@ -85,6 +85,9 @@ while getopts "$opts" arg; do
     esac
 done
 
+# Compile the preprocessor
+make pp
+
 # Convert DIRS and FILES to nul-terminated strings, store in temp file (for use by du)
 # Source: https://unix.stackexchange.com/questions/102891/posix-compliant-way-to-work-with-a-list-of-filenames-possibly-with-whitespace
 set -f; IFS='
@@ -104,8 +107,8 @@ $inspath"
     else
         logf "Copying $path: "
     fi
-    verbose cp "$path" "$inspath"
-    if cp -u "$path" "$inspath"; then
+    verbose ./pp "commands.m" "$path" > "$inspath"
+    if ./pp "commands.m" "$path" > "$inspath"; then
         if "$VERBOSE"; then
             log "Success"
         else
