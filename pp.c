@@ -14,7 +14,7 @@
  *
  *  #!/bin/sh
  *  # Imports all functions from module 'modulename'
- *  #!import modulename
+ *  #!import modulename.*
  *
  *file: modulename.m
  *  #!/bin/sh
@@ -23,7 +23,7 @@
  */
 
 /*
- * !! The modules to be imported HAS to be passed as a input file parameter. 
+ * NOTE: The modules files to be imported HAS to be passed as a input file parameter. 
  */
 
 #include <stdio.h>
@@ -217,41 +217,6 @@ bool isident(const char *s) {
         s++;
     }
     return true;
-}
-
-
-char **buffs = NULL;
-size_t nbuffs = 0;
-size_t sbuffs = 0;
-
-// These functions held a stack of states .
-char *peekbuffs() {
-    if (nbuffs == 0 || sbuffs == 0) {
-        return NULL;
-    }
-    return buffs[nbuffs-1];
-}
-
-char *popbuffs() {
-    if (nbuffs == 0 || sbuffs == 0) {
-        return NULL;
-    }
-    return buffs[--nbuffs];
-}
-
-// ALLOCS
-void pushbuff(char *buff) {
-    if (nbuffs + 1 >= sbuffs) {
-        size_t nsbuffs = 2*sbuffs + 1;
-        char **new_buffs = xcalloc(nsbuffs, sizeof (buffs));
-        if (buffs) {
-            memcpy(new_buffs, buffs, nbuffs);
-            free(buffs);
-        }
-        buffs = new_buffs;
-        sbuffs = nsbuffs;
-    }
-    buffs[nbuffs++] = buff;
 }
 
 typedef int state;
@@ -504,7 +469,7 @@ bool parse_next_func(FILE *f, struct function *func) {
                 // Which we expect to be the next identifier.
                 char *trimmed = trim(b);
                 if (!isident(trimmed)) {
-                    errorf("%s is not a valid function identifier.\n", trimmed);
+                    errorf("!%s is not a valid function identifier.\n", trimmed);
                     ok = false;
                     break;
                 }
@@ -570,11 +535,14 @@ bool parse_next_func(FILE *f, struct function *func) {
                             func->name = identstr;
                             identstr = NULL;
 
-                            verbosef("Found valid function start using %s (){: %s\n",
-                                     func->name, func->name);
+                            verbosef("Found valid function start using %s"
+                                     "(){: %s\n", func->name, func->name);
 
                             ok = read_function_block(f, func);
-                            verbosef("OK: %d, Read function %s\n =================contents=================:\n%s\n==================================\n", ok, func->name, func->contents);
+                            verbosef("OK: %d, Read function %s\n"
+                                     "=================contents================"
+                                     "\n%s\n=================================\n",
+                                     ok, func->name, func->contents);
                             done = true;
                             break;
                         }
@@ -698,9 +666,6 @@ bool process_scripts(const char *spath, FILE *out, struct module *modulev, size_
                 }
             }
         } else if (stages_str[stage] == NULL) {
-            if (!isident(b)) {
-                errorf("'%s' is not a valid identifier!\n", b);
-            }
             verbosef("Doing custom stage: %d!\n", stage);
             // A stage marked with NULL requires custom input.
             // We save this inputin the b_saved vector.
@@ -877,10 +842,6 @@ int main(int argc, char *argv[]) {
 
     // GLOBALS
     free(states);
-    for (size_t i = 0; i < nbuffs; i++) {
-        free(buffs[i]);
-    }
-    free(buffs);
 
     return 0; 
 }
