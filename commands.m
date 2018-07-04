@@ -19,6 +19,11 @@ default_setup() {
 # Comes along with default_opts..
 default_usage() {
     echo "Usage: $0 [-dhv] $USAGE_TEXT"
+    if [ -n "$DESCRIPTION_TEXT" ]; then
+	    echo
+	    echo "Description:"
+	    echo "    $DESCRIPTION_TEXT"
+    fi
 }
 
 # default_opts: helper function passing my minimum
@@ -215,3 +220,5 @@ is_number() {
     echo "$1" | grep '^[0-9][0-9]*[\.]*[0-9]*$' > /dev/null
     return "$?"
 }
+
+# vim: set ft=sh:
