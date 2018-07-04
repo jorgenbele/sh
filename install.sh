@@ -25,6 +25,7 @@ helpers/redshift-enable.sh
 helpers/silent.sh
 helpers/yt.sh
 helpers/yt.sh
+helpers/multi-monitor-toggle.sh
 rofi/rofi-locate.sh
 rofi/rofi-wallpaper.sh
 statusbar/reset-bar.sh
