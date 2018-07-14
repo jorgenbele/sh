@@ -5,7 +5,7 @@
 # Description: 
 #   Runs mpv (uses youtube-dl) to play file/stream/url from clipboard.
 #!import commands.*
-dependencies="mpv xclip"
+dependencies="mpv xsel"
 default_setup "$@"
 
-mpv $(xclip -o)
+mpv $(xsel -o)
