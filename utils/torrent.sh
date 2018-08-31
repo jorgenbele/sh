@@ -19,6 +19,7 @@ dependencies="aria2c"
 [ -z "$METADATA_FILE" ] && METADATA_FILE="meta.json"
 [ -z "$OMDB_API_KEY"  ] && OMDB_API_KEY=""
 [ -z "$VERBOSE"       ] && VERBOSE=false
+[ -z "$TORRENT"       ] && TORRENT=false
 
 HAS_SETUP=false
 
@@ -27,6 +28,7 @@ usage() {
     echo "  -h  Display this message and quit"
     echo "  -v  Toggle verbose output"
     echo "  -m  Save metadata from OMDB"
+    echo "  -t  Torrent (calls 1337x)"
     echo "  -d  Exits with no error code if all dependencies are set up"
     echo
     echo "MODE PARAMS can be one of the following"
@@ -110,10 +112,11 @@ write_metadata() {
 
 # add(): Adds a torrent by name and magnet link.
 # $1 - name
-# $2 - magnet link
+# $2 - magnet link (only if $TORRENT is false)
 add() {
     setup_if_needed
     destdir="$DEST_DIR/$(echo "$1" | snakecase_inp)"
+    magnet_link="$2"
     verbosef "Creating directory: \"%s\"\n" "$destdir"
 
     if ! [ -d "$destdir" ] && ! mkdir -p "$destdir"; then
@@ -121,16 +124,21 @@ add() {
         exit 1
     fi
 
+    if "$TORRENT"; then
+        verbosef "Starting 1337x client: 1337x -s -m search \"%s\"\n" "$1"
+        magnet_link="$(1337x -s -m search "$1")"
+    fi
+
     verbosef "Saving magnet link as: \"%s\"\n" "$destdir/$MAGNET_FILE"
-    echo "$2" > "$destdir/$MAGNET_FILE"
+    echo "$magnet_link" > "$destdir/$MAGNET_FILE"
 
     if "$METADATA"; then
         write_metadata "$1" &
     fi
 
     verbose "Starting aria2c in directory: \"$destdir\""
-    verbose "aria2c -d "$destdir" "$2""
-    aria2c -d "$destdir" "$2"
+    verbose "aria2c -d "$destdir" "$maget_link""
+    aria2c -d "$destdir" "$magnet_link"
 }
 
 # continue_(): Continues a torrent by name.
@@ -173,11 +181,12 @@ fi
 # NOTE: I chose to do the parsing in two parts due to the
 # need to enable toggles before execution of any commands.
 # This means that the -v (verbose) toggle is position independent.
-opts="hmvdaVlrc"
+opts="hmvdatVlrc"
 while getopts "$opts" arg; do
     case "$arg" in
         'm') METADATA=true; ;;
         'v') VERBOSE=true;  ;;
+        't') TORRENT=true   ;;
     esac
 done
 OPTIND=1
@@ -186,7 +195,6 @@ while getopts "$opts" arg; do
     case "$arg" in
         'h') usage; exit 0; ;;
         'd') check_deps; exit; "$?" ;;
-
         'a') MODE='add'      ;;
         'V') MODE='visit'    ;;
         'l') MODE='list'     ;;
@@ -220,7 +228,9 @@ case "$MODE" in
 esac
 
 nameopt="$1"
-magnetopt="$2"
+#magnetopt="$2"
+shift 1
+rest="$@"
 
 if [ -z "$nameopt" ]; then
     log "No torrent name provided. Quitting."
@@ -229,11 +239,16 @@ fi
 
 case "$MODE" in
     a*)
-        if [ -z "$magnetopt" ]; then
+        #if [ -z "$magnetopt" ]; then
+        #    log "No magnet link provided. Quitting."
+        #    exit 2
+        #fi
+        if ! "$TORRENT" && [ -z "$rest" ]; then
             log "No magnet link provided. Quitting."
             exit 2
         fi
-        add       "$nameopt" "$magnetopt";
+        #add       "$nameopt" "$magnetopt";
+        add       "$nameopt" "$rest";
         ;;
     v*) visit     "$nameopt"; ;;
     r*) remove    "$nameopt"; ;;
