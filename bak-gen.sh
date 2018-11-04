@@ -2,6 +2,7 @@
 # Description: generates backup archives of a precompiled list of directories and files
 # Author: Jørgen Bele Reinfjell
 # Date: 19.09.2017 [dd.mm.yyyy]
+# Modified: 04.11.2018 [dd.mm.yyyy]
 # File: bak-gen.sh
 
 [ -z "$HOSTNAME" ] && HOSTNAME="$(hostname)"
@@ -16,10 +17,13 @@ xz_cmd="xz -z -T 0 - "
 # Newline separated list of dirs (the '/' postfix are needed)
 DIRS="$HOME/src/
 $HOME/bin/
+$HOME/conf
+$HOME/books
+$HOME/pdfs
 $HOME/usr/docs/
 $HOME/usr/vpn/
 $HOME/.ecryptfs/
-$HOME/.sec/
+$HOME/usr/.gpg
 $HOME/.emacs.d/
 $HOME/.zsh
 $HOME/.vim/
