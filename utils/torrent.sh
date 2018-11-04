@@ -10,7 +10,7 @@
 #!import commands.has_commands
 #!import commands.check_deps
 
-dependencies="aria2c"
+dependencies="aria2c 1337x"
 
 # Use environment variables if set.
 [ -z "$DEST_DIR"      ] && DEST_DIR="$HOME/dls/torrent"
@@ -152,8 +152,8 @@ continue_() {
     verbosef "Magnet link: \n%s\n" "$magnet"
 
     verbosef "(continuing) Starting aria2c in directory: \"%s\"\n" "$destdir"
-    verbosef "aria2c --continue -d \"%s\" \"%s\"\n" "$destdir" "$2"
-    aria2c --continue -d "$destdir" "$2"
+    verbosef "aria2c --bt-save-metadata --continue -d \"%s\" \"%s\"\n" "$destdir" "$2"
+    aria2c --bt-save-metadata --continue -d "$destdir" "$2"
 }
 
 # visit(): Spawns a subshell in the desired torrents directory.
