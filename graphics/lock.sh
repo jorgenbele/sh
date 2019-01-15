@@ -13,4 +13,5 @@ fi
 eumount
 
 # Start locker.
-i3lock -i "$HOME/.wallpaper" -f
+#i3lock -i "$HOME/.wallpaper" -f
+slock

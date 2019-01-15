@@ -1,0 +1,30 @@
+#+TITLE: Sh - (POSIX) Shell scripts
+
+* How to use the preprocessor
+You might notice that some of the shell scripts use code as follows:
+#+BEGIN_SRC sh
+#!import module.function
+#!import module.*
+#+END_SRC
+
+This means that it uses the $pp$ processor, found in $pp.c$. This preprocessor
+imports functions from a $<shell-source>.m$ file so that they are available in the preprocessed output.
+
+** Compilation
+#+BEGIN_SRC sh
+cc -o pp pp.c # or: make pp
+#+END_SRC
+
+** Usage
+#+BEGIN_SRC sh
+Usage: pp [-hv] [-o OUTFILE] [INFILE...]
+  -h   Show this message and exit.
+  -v   Enable verbose output.
+  -o   Use custom output name instead of default 'outfile'.
+#+END_SRC
+
+** Example
+#+BEGIN_SRC sh
+# The following creates out/pushbak.sh from the script utils/pushbak.sh and the module commands.m
+pp -o out/pushbak.sh utils/pushbak.sh commands.m # all module files has to be specified, and must end in '.m'
+#+END_SRC
