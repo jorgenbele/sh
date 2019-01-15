@@ -81,7 +81,7 @@ done
 # Load all identities specified by names
 shift "$((OPTIND-1))"
 while [ -n "$1" ]; do
-	if ! load_identity "$HOME/.ssh/$1_id_rsa"; then
+	if ! load_identity "$HOME/.ssh/$1_id_rsa" && ! load_identity "$HOME/.ssh/$1_id_ed25519"; then
 		log "Quitting early due to previous errors. "
 		exit "$?"
 	fi
