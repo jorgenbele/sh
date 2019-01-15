@@ -7,8 +7,8 @@ You might notice that some of the shell scripts use code as follows:
 #!import module.*
 #+END_SRC
 
-This means that it uses the $pp$ processor, found in $pp.c$. This preprocessor
-imports functions from a $<shell-source>.m$ file so that they are available in the preprocessed output.
+This means that it uses the pp processor, found in pp.c. This preprocessor
+imports functions from a <shell-source>.m file so that they are available in the preprocessed output.
 
 ** Compilation
 #+BEGIN_SRC sh
