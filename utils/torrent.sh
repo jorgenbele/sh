@@ -10,7 +10,7 @@
 #!import commands.has_commands
 #!import commands.check_deps
 
-dependencies="aria2c 1337x"
+dependencies="aria2c 1337x tpb"
 
 # Use environment variables if set.
 [ -z "$DEST_DIR"      ] && DEST_DIR="$HOME/dls/torrent"
@@ -24,15 +24,16 @@ dependencies="aria2c 1337x"
 HAS_SETUP=false
 
 usage() {
-    echo "Usage: $0 [-hlv] [MODE PARAMS]"
-    echo "  -h  Display this message and quit"
-    echo "  -v  Toggle verbose output"
-    echo "  -m  Save metadata from OMDB"
-    echo "  -t  Torrent (calls 1337x)"
-    echo "  -d  Exits with no error code if all dependencies are set up"
+    echo "Usage: $0 [-hlvmtd] [-s (tpb|1337x)] [MODE PARAMS]"
+    echo "  -h                Display this message and quit"
+    echo "  -v                Toggle verbose output"
+    echo "  -m                Save metadata from OMDB"
+    echo "  -s (tpb | 1337x)  Selector"
+    echo "  -t                Torrent (calls 1337x or TORRENT_SELECTER)"
+    echo "  -d                Exits with no error code if all dependencies are set up"
     echo
     echo "MODE PARAMS can be one of the following"
-    echo "  -a|add      NAME MAGNET  Add a new torrent"
+    echo "  -a|add      NAME [MAGNET]  Add a new torrent"
     echo "  -c|continue NAME         Continue torrenting"
     echo "  -V|visit    NAME         Change to a torrents dir"
     echo "  -l|list                  List all torrents"
@@ -125,8 +126,13 @@ add() {
     fi
 
     if "$TORRENT"; then
-        verbosef "Starting 1337x client: 1337x -s -m search \"%s\"\n" "$1"
-        magnet_link="$(1337x -s -m search "$1")"
+        if [ -n "$TORRENT_SELECTER" ]; then
+            verbosef "Starting $TORRENT_SELECTER: $TORRENT_SELECTER -s -m search \"%s\"\n" "$1"
+            magnet_link="$($TORRENT_SELECTER -s -m search "$1")"
+        else
+            verbosef "Starting 1337x client: 1337x -s -m search \"%s\"\n" "$1"
+            magnet_link="$(1337x -s -m search "$1")"
+        fi
     fi
 
     verbosef "Saving magnet link as: \"%s\"\n" "$destdir/$MAGNET_FILE"
@@ -181,7 +187,7 @@ fi
 # NOTE: I chose to do the parsing in two parts due to the
 # need to enable toggles before execution of any commands.
 # This means that the -v (verbose) toggle is position independent.
-opts="hmvdatVlrc"
+opts="hmvdatVlrcs:"
 while getopts "$opts" arg; do
     case "$arg" in
         'm') METADATA=true; ;;
@@ -200,6 +206,7 @@ while getopts "$opts" arg; do
         'l') MODE='list'     ;;
         'r') MODE='remove'   ;;
         'c') MODE='continue' ;;
+        's') TORRENT_SELECTER=$OPTARG ;;
         '?') log "Unknown option: $arg. Quitting."; exit 3 ;;
     esac
 done
