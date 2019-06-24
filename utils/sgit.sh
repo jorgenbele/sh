@@ -38,7 +38,7 @@ dependencies="git ssh rsync"
 
 VERBOSE=false
 
-[ -z "$GIT_SERVER" ] && GIT_SERVER="debserv"
+[ -z "$GIT_SERVER" ] && GIT_SERVER="srv"
 [ -z "$GIT_USER"   ] && GIT_USER="git"
 [ -z "$GIT_SUDIR"  ] && GIT_SUBDIR="$USER"
 

@@ -17,7 +17,7 @@ dependencies="aria2c 1337x tpb"
 [ -z "$MAGNET_FILE"   ] && MAGNET_FILE="magnet.txt"
 [ -z "$METADATA"      ] && METADATA=false
 [ -z "$METADATA_FILE" ] && METADATA_FILE="meta.json"
-[ -z "$OMDB_API_KEY"  ] && OMDB_API_KEY=""
+#[ -z "$OMDB_API_KEY"  ] && OMDB_API_KEY=""
 [ -z "$VERBOSE"       ] && VERBOSE=false
 [ -z "$TORRENT"       ] && TORRENT=false
 

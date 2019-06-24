@@ -158,7 +158,7 @@ while getopts "$OPTS" arg; do
 	esac
 done
 
-[ -z "$REMOTE" ] && REMOTE="rsyncbak@debserv:/mnt/backup"
+[ -z "$REMOTE" ] && REMOTE="rsyncbak@srv:/mnt/backup"
 [ -z "$REMOTES" ] && REMOTES="$REMOTE"  # List of remotes separated by newlines.
 
 # Treat all following args as paths
